@@ -37,6 +37,8 @@ class RenderRequestBuilder
     private ?float $pdfWatermarkFontSize = null;
     private ?float $pdfWatermarkScale = null;
     private ?WatermarkLayer $pdfWatermarkLayer = null;
+    private ?PdfStandard $pdfStandard = null;
+    private ?array $pdfEmbeddedFiles = null;
 
     public function __construct(
         ForgeClient $client,
@@ -75,6 +77,13 @@ class RenderRequestBuilder
     public function pdfWatermarkFontSize(float $size): static { $this->pdfWatermarkFontSize = $size; return $this; }
     public function pdfWatermarkScale(float $scale): static { $this->pdfWatermarkScale = $scale; return $this; }
     public function pdfWatermarkLayer(WatermarkLayer $layer): static { $this->pdfWatermarkLayer = $layer; return $this; }
+    public function pdfStandard(PdfStandard $standard): static { $this->pdfStandard = $standard; return $this; }
+    public function pdfAttach(string $path, string $base64Data, ?string $mimeType = null, ?string $description = null, ?EmbedRelationship $relationship = null): static
+    {
+        $this->pdfEmbeddedFiles ??= [];
+        $this->pdfEmbeddedFiles[] = ['path' => $path, 'data' => $base64Data, 'mime_type' => $mimeType, 'description' => $description, 'relationship' => $relationship];
+        return $this;
+    }
 
     /** Build the payload array. */
     public function buildPayload(): array
@@ -110,7 +119,8 @@ class RenderRequestBuilder
             || $this->pdfWatermarkText !== null || $this->pdfWatermarkImage !== null
             || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
             || $this->pdfWatermarkColor !== null || $this->pdfWatermarkFontSize !== null
-            || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null) {
+            || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null
+            || $this->pdfStandard !== null || $this->pdfEmbeddedFiles !== null) {
             $p = [];
             if ($this->pdfTitle !== null) $p['title'] = $this->pdfTitle;
             if ($this->pdfAuthor !== null) $p['author'] = $this->pdfAuthor;
@@ -118,6 +128,7 @@ class RenderRequestBuilder
             if ($this->pdfKeywords !== null) $p['keywords'] = $this->pdfKeywords;
             if ($this->pdfCreator !== null) $p['creator'] = $this->pdfCreator;
             if ($this->pdfBookmarks !== null) $p['bookmarks'] = $this->pdfBookmarks;
+            if ($this->pdfStandard !== null) $p['standard'] = $this->pdfStandard->value;
             if ($this->pdfWatermarkText !== null || $this->pdfWatermarkImage !== null
                 || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
                 || $this->pdfWatermarkColor !== null || $this->pdfWatermarkFontSize !== null
@@ -132,6 +143,17 @@ class RenderRequestBuilder
                 if ($this->pdfWatermarkScale !== null) $wm['scale'] = $this->pdfWatermarkScale;
                 if ($this->pdfWatermarkLayer !== null) $wm['layer'] = $this->pdfWatermarkLayer->value;
                 $p['watermark'] = $wm;
+            }
+            if ($this->pdfEmbeddedFiles !== null) {
+                $files = [];
+                foreach ($this->pdfEmbeddedFiles as $ef) {
+                    $e = ['path' => $ef['path'], 'data' => $ef['data']];
+                    if ($ef['mime_type'] !== null) $e['mime_type'] = $ef['mime_type'];
+                    if ($ef['description'] !== null) $e['description'] = $ef['description'];
+                    if ($ef['relationship'] !== null) $e['relationship'] = $ef['relationship']->value;
+                    $files[] = $e;
+                }
+                $p['embedded_files'] = $files;
             }
             $payload['pdf'] = $p;
         }

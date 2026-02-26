@@ -111,6 +111,34 @@ $pdf = $client->renderHtml('<h1>Draft Report</h1>')
     ->send();
 ```
 
+### PDF/A Archival Output
+
+Generate PDF/A-compliant documents for long-term archiving.
+
+```php
+use Centrix\Forge\PdfStandard;
+
+$pdf = $client->renderHtml('<h1>Archival Report</h1>')
+    ->pdfStandard(PdfStandard::A2B)
+    ->pdfTitle('Archival Report')
+    ->send();
+```
+
+### Embedded Files (ZUGFeRD/Factur-X)
+
+Attach files to PDF output. Requires PDF/A-3b for embedded file attachments.
+
+```php
+use Centrix\Forge\{PdfStandard, EmbedRelationship};
+
+$xmlData = base64_encode(file_get_contents('factur-x.xml'));
+
+$pdf = $client->renderHtml('<h1>Invoice #1234</h1>')
+    ->pdfStandard(PdfStandard::A3B)
+    ->pdfAttach('factur-x.xml', $xmlData, 'text/xml', 'Factur-X invoice', EmbedRelationship::Alternative)
+    ->send();
+```
+
 ### Custom Timeout
 
 ```php
@@ -170,6 +198,8 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `pdfWatermarkFontSize` | `float` | Watermark font size in PDF points (default: auto) |
 | `pdfWatermarkScale` | `float` | Watermark image scale (0.0-1.0, default: 0.5) |
 | `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `Over` or `Under` |
+| `pdfStandard` | `PdfStandard` | PDF standard: `None`, `A2B`, `A3B` |
+| `pdfAttach` | `string, string, ...` | Embed file: path, base64 data, mime type, description, relationship |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
@@ -185,6 +215,8 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `DitherMethod` | `None`, `FloydSteinberg`, `Atkinson`, `Ordered` |
 | `Palette` | `Auto`, `BlackWhite`, `Grayscale`, `Eink` |
 | `WatermarkLayer` | `Over`, `Under` |
+| `PdfStandard` | `None`, `A2B`, `A3B` |
+| `EmbedRelationship` | `Alternative`, `Supplement`, `Data`, `Source`, `Unspecified` |
 
 ### Exceptions
 
