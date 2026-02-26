@@ -37,8 +37,10 @@ class RenderRequestBuilder
     private ?float $pdfWatermarkFontSize = null;
     private ?float $pdfWatermarkScale = null;
     private ?WatermarkLayer $pdfWatermarkLayer = null;
+    private ?string $pdfWatermarkPages = null;
     private ?PdfStandard $pdfStandard = null;
     private ?array $pdfEmbeddedFiles = null;
+    private ?array $pdfBarcodes = null;
 
     public function __construct(
         ForgeClient $client,
@@ -77,11 +79,39 @@ class RenderRequestBuilder
     public function pdfWatermarkFontSize(float $size): static { $this->pdfWatermarkFontSize = $size; return $this; }
     public function pdfWatermarkScale(float $scale): static { $this->pdfWatermarkScale = $scale; return $this; }
     public function pdfWatermarkLayer(WatermarkLayer $layer): static { $this->pdfWatermarkLayer = $layer; return $this; }
+    public function pdfWatermarkPages(string $pages): static { $this->pdfWatermarkPages = $pages; return $this; }
     public function pdfStandard(PdfStandard $standard): static { $this->pdfStandard = $standard; return $this; }
     public function pdfAttach(string $path, string $base64Data, ?string $mimeType = null, ?string $description = null, ?EmbedRelationship $relationship = null): static
     {
         $this->pdfEmbeddedFiles ??= [];
         $this->pdfEmbeddedFiles[] = ['path' => $path, 'data' => $base64Data, 'mime_type' => $mimeType, 'description' => $description, 'relationship' => $relationship];
+        return $this;
+    }
+    public function pdfBarcode(
+        BarcodeType $type,
+        string $data,
+        ?float $x = null,
+        ?float $y = null,
+        ?float $width = null,
+        ?float $height = null,
+        ?BarcodeAnchor $anchor = null,
+        ?string $foreground = null,
+        ?string $background = null,
+        ?bool $drawBackground = null,
+        ?string $pages = null,
+    ): static {
+        $entry = ['type' => $type->value, 'data' => $data];
+        if ($x !== null) $entry['x'] = $x;
+        if ($y !== null) $entry['y'] = $y;
+        if ($width !== null) $entry['width'] = $width;
+        if ($height !== null) $entry['height'] = $height;
+        if ($anchor !== null) $entry['anchor'] = $anchor->value;
+        if ($foreground !== null) $entry['foreground'] = $foreground;
+        if ($background !== null) $entry['background'] = $background;
+        if ($drawBackground !== null) $entry['draw_background'] = $drawBackground;
+        if ($pages !== null) $entry['pages'] = $pages;
+        $this->pdfBarcodes ??= [];
+        $this->pdfBarcodes[] = $entry;
         return $this;
     }
 
@@ -120,7 +150,9 @@ class RenderRequestBuilder
             || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
             || $this->pdfWatermarkColor !== null || $this->pdfWatermarkFontSize !== null
             || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null
-            || $this->pdfStandard !== null || $this->pdfEmbeddedFiles !== null) {
+            || $this->pdfWatermarkPages !== null
+            || $this->pdfStandard !== null || $this->pdfEmbeddedFiles !== null
+            || $this->pdfBarcodes !== null) {
             $p = [];
             if ($this->pdfTitle !== null) $p['title'] = $this->pdfTitle;
             if ($this->pdfAuthor !== null) $p['author'] = $this->pdfAuthor;
@@ -132,7 +164,8 @@ class RenderRequestBuilder
             if ($this->pdfWatermarkText !== null || $this->pdfWatermarkImage !== null
                 || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
                 || $this->pdfWatermarkColor !== null || $this->pdfWatermarkFontSize !== null
-                || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null) {
+                || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null
+                || $this->pdfWatermarkPages !== null) {
                 $wm = [];
                 if ($this->pdfWatermarkText !== null) $wm['text'] = $this->pdfWatermarkText;
                 if ($this->pdfWatermarkImage !== null) $wm['image_data'] = $this->pdfWatermarkImage;
@@ -142,6 +175,7 @@ class RenderRequestBuilder
                 if ($this->pdfWatermarkFontSize !== null) $wm['font_size'] = $this->pdfWatermarkFontSize;
                 if ($this->pdfWatermarkScale !== null) $wm['scale'] = $this->pdfWatermarkScale;
                 if ($this->pdfWatermarkLayer !== null) $wm['layer'] = $this->pdfWatermarkLayer->value;
+                if ($this->pdfWatermarkPages !== null) $wm['pages'] = $this->pdfWatermarkPages;
                 $p['watermark'] = $wm;
             }
             if ($this->pdfEmbeddedFiles !== null) {
@@ -154,6 +188,9 @@ class RenderRequestBuilder
                     $files[] = $e;
                 }
                 $p['embedded_files'] = $files;
+            }
+            if ($this->pdfBarcodes !== null) {
+                $p['barcodes'] = $this->pdfBarcodes;
             }
             $payload['pdf'] = $p;
         }
