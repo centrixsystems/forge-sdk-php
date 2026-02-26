@@ -78,6 +78,23 @@ $img = $client->renderHtml('<h1>Brand</h1>')
     ->send();
 ```
 
+### PDF Metadata
+
+Set PDF document properties (title, author, etc.) for the generated file.
+
+```php
+$pdf = $client->renderHtml('<h1>Annual Report</h1>')
+    ->format(OutputFormat::Pdf)
+    ->paper('a4')
+    ->pdfTitle('Annual Report 2026')
+    ->pdfAuthor('Jane Doe')
+    ->pdfSubject('Company Financials')
+    ->pdfKeywords('finance,annual,report')
+    ->pdfCreator('Centrix ERP')
+    ->pdfBookmarks(true)
+    ->send();
+```
+
 ### Custom Timeout
 
 ```php
@@ -123,6 +140,12 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `colors` | `int` | Quantization color count (2-256) |
 | `palette` | `Palette\|array` | Enum preset or array of hex color strings |
 | `dither` | `DitherMethod` | Dithering algorithm |
+| `pdfTitle` | `string` | PDF document title |
+| `pdfAuthor` | `string` | PDF document author |
+| `pdfSubject` | `string` | PDF document subject |
+| `pdfKeywords` | `string` | PDF keywords (comma-separated) |
+| `pdfCreator` | `string` | PDF creator application name |
+| `pdfBookmarks` | `bool` | Generate PDF bookmarks from headings |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|

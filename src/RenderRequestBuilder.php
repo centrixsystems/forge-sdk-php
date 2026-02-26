@@ -23,6 +23,12 @@ class RenderRequestBuilder
     private ?int $colors = null;
     private Palette|array|null $palette = null;
     private ?DitherMethod $dither = null;
+    private ?string $pdfTitle = null;
+    private ?string $pdfAuthor = null;
+    private ?string $pdfSubject = null;
+    private ?string $pdfKeywords = null;
+    private ?string $pdfCreator = null;
+    private ?bool $pdfBookmarks = null;
 
     public function __construct(
         ForgeClient $client,
@@ -47,6 +53,12 @@ class RenderRequestBuilder
     public function colors(int $n): static { $this->colors = $n; return $this; }
     public function palette(Palette|array $p): static { $this->palette = $p; return $this; }
     public function dither(DitherMethod $method): static { $this->dither = $method; return $this; }
+    public function pdfTitle(string $title): static { $this->pdfTitle = $title; return $this; }
+    public function pdfAuthor(string $author): static { $this->pdfAuthor = $author; return $this; }
+    public function pdfSubject(string $subject): static { $this->pdfSubject = $subject; return $this; }
+    public function pdfKeywords(string $keywords): static { $this->pdfKeywords = $keywords; return $this; }
+    public function pdfCreator(string $creator): static { $this->pdfCreator = $creator; return $this; }
+    public function pdfBookmarks(bool $bookmarks): static { $this->pdfBookmarks = $bookmarks; return $this; }
 
     /** Build the payload array. */
     public function buildPayload(): array
@@ -75,6 +87,18 @@ class RenderRequestBuilder
             }
             if ($this->dither !== null) $q['dither'] = $this->dither->value;
             $payload['quantize'] = $q;
+        }
+
+        if ($this->pdfTitle !== null || $this->pdfAuthor !== null || $this->pdfSubject !== null
+            || $this->pdfKeywords !== null || $this->pdfCreator !== null || $this->pdfBookmarks !== null) {
+            $p = [];
+            if ($this->pdfTitle !== null) $p['title'] = $this->pdfTitle;
+            if ($this->pdfAuthor !== null) $p['author'] = $this->pdfAuthor;
+            if ($this->pdfSubject !== null) $p['subject'] = $this->pdfSubject;
+            if ($this->pdfKeywords !== null) $p['keywords'] = $this->pdfKeywords;
+            if ($this->pdfCreator !== null) $p['creator'] = $this->pdfCreator;
+            if ($this->pdfBookmarks !== null) $p['bookmarks'] = $this->pdfBookmarks;
+            $payload['pdf'] = $p;
         }
 
         return $payload;

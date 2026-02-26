@@ -94,4 +94,49 @@ class ForgeClientTest extends TestCase
 
         $this->assertArrayNotHasKey('quantize', $payload);
     }
+
+    public function testPdfOptionsPayload(): void
+    {
+        $payload = $this->client->renderHtml('<h1>Report</h1>')
+            ->format(OutputFormat::Pdf)
+            ->pdfTitle('Annual Report')
+            ->pdfAuthor('Jane Doe')
+            ->pdfSubject('Financials')
+            ->pdfKeywords('finance,annual,report')
+            ->pdfCreator('Centrix ERP')
+            ->pdfBookmarks(true)
+            ->buildPayload();
+
+        $pdf = $payload['pdf'];
+        $this->assertSame('Annual Report', $pdf['title']);
+        $this->assertSame('Jane Doe', $pdf['author']);
+        $this->assertSame('Financials', $pdf['subject']);
+        $this->assertSame('finance,annual,report', $pdf['keywords']);
+        $this->assertSame('Centrix ERP', $pdf['creator']);
+        $this->assertTrue($pdf['bookmarks']);
+    }
+
+    public function testPdfOptionsPartial(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfTitle('Title Only')
+            ->buildPayload();
+
+        $pdf = $payload['pdf'];
+        $this->assertSame('Title Only', $pdf['title']);
+        $this->assertArrayNotHasKey('author', $pdf);
+        $this->assertArrayNotHasKey('subject', $pdf);
+        $this->assertArrayNotHasKey('keywords', $pdf);
+        $this->assertArrayNotHasKey('creator', $pdf);
+        $this->assertArrayNotHasKey('bookmarks', $pdf);
+    }
+
+    public function testNoPdfWhenUnset(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->format(OutputFormat::Pdf)
+            ->buildPayload();
+
+        $this->assertArrayNotHasKey('pdf', $payload);
+    }
 }
