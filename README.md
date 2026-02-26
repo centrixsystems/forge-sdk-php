@@ -95,6 +95,22 @@ $pdf = $client->renderHtml('<h1>Annual Report</h1>')
     ->send();
 ```
 
+### PDF Watermarks
+
+Add text or image watermarks to each page.
+
+```php
+use Centrix\Forge\WatermarkLayer;
+
+$pdf = $client->renderHtml('<h1>Draft Report</h1>')
+    ->pdfWatermarkText('DRAFT')
+    ->pdfWatermarkOpacity(0.15)
+    ->pdfWatermarkRotation(-45)
+    ->pdfWatermarkColor('#888888')
+    ->pdfWatermarkLayer(WatermarkLayer::Over)
+    ->send();
+```
+
 ### Custom Timeout
 
 ```php
@@ -146,6 +162,14 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `pdfKeywords` | `string` | PDF keywords (comma-separated) |
 | `pdfCreator` | `string` | PDF creator application name |
 | `pdfBookmarks` | `bool` | Generate PDF bookmarks from headings |
+| `pdfWatermarkText` | `string` | Watermark text on each page |
+| `pdfWatermarkImage` | `string` | Base64-encoded PNG/JPEG watermark image |
+| `pdfWatermarkOpacity` | `float` | Watermark opacity (0.0-1.0, default: 0.15) |
+| `pdfWatermarkRotation` | `float` | Watermark rotation in degrees (default: -45) |
+| `pdfWatermarkColor` | `string` | Watermark text color as hex (default: #888888) |
+| `pdfWatermarkFontSize` | `float` | Watermark font size in PDF points (default: auto) |
+| `pdfWatermarkScale` | `float` | Watermark image scale (0.0-1.0, default: 0.5) |
+| `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `Over` or `Under` |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
@@ -160,6 +184,7 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `Flow` | `Auto`, `Paginate`, `Continuous` |
 | `DitherMethod` | `None`, `FloydSteinberg`, `Atkinson`, `Ordered` |
 | `Palette` | `Auto`, `BlackWhite`, `Grayscale`, `Eink` |
+| `WatermarkLayer` | `Over`, `Under` |
 
 ### Exceptions
 
