@@ -111,6 +111,69 @@ $pdf = $client->renderHtml('<h1>Draft Report</h1>')
     ->send();
 ```
 
+### PDF Rendering Mode
+
+Control how PDF content is rendered.
+
+```php
+use Centrix\Forge\PdfMode;
+
+$pdf = $client->renderHtml('<h1>Vector Report</h1>')
+    ->pdfMode(PdfMode::Vector)
+    ->send();
+```
+
+### PDF Digital Signatures
+
+Digitally sign PDF documents with a PKCS#12 certificate.
+
+```php
+$cert = base64_encode(file_get_contents('certificate.p12'));
+
+$pdf = $client->renderHtml('<h1>Signed Contract</h1>')
+    ->pdfSignCertificate($cert)
+    ->pdfSignPassword('cert-password')
+    ->pdfSignName('Jane Doe')
+    ->pdfSignReason('Approval')
+    ->pdfSignLocation('New York')
+    ->pdfSignTimestampUrl('https://tsa.example.com')
+    ->send();
+```
+
+### PDF Encryption
+
+Password-protect PDF documents and restrict permissions.
+
+```php
+$pdf = $client->renderHtml('<h1>Confidential</h1>')
+    ->pdfUserPassword('reader-password')
+    ->pdfOwnerPassword('admin-password')
+    ->pdfPermissions('print,copy')
+    ->send();
+```
+
+### PDF Accessibility
+
+Generate accessible PDFs conforming to PDF/UA-1.
+
+```php
+use Centrix\Forge\AccessibilityLevel;
+
+$pdf = $client->renderHtml('<h1>Accessible Report</h1>')
+    ->pdfAccessibility(AccessibilityLevel::PdfUa1)
+    ->send();
+```
+
+### PDF Linearization
+
+Optimize PDFs for fast web viewing (byte-serving).
+
+```php
+$pdf = $client->renderHtml('<h1>Web Report</h1>')
+    ->pdfLinearize(true)
+    ->send();
+```
+
 ### PDF/A Archival Output
 
 Generate PDF/A-compliant documents for long-term archiving.
@@ -190,6 +253,7 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `pdfKeywords` | `string` | PDF keywords (comma-separated) |
 | `pdfCreator` | `string` | PDF creator application name |
 | `pdfBookmarks` | `bool` | Generate PDF bookmarks from headings |
+| `pdfPageNumbers` | `bool` | Add "Page X of Y" footers to each page |
 | `pdfWatermarkText` | `string` | Watermark text on each page |
 | `pdfWatermarkImage` | `string` | Base64-encoded PNG/JPEG watermark image |
 | `pdfWatermarkOpacity` | `float` | Watermark opacity (0.0-1.0, default: 0.15) |
@@ -200,6 +264,18 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `pdfWatermarkLayer` | `WatermarkLayer` | Layer position: `Over` or `Under` |
 | `pdfStandard` | `PdfStandard` | PDF standard: `None`, `A2B`, `A3B` |
 | `pdfAttach` | `string, string, ...` | Embed file: path, base64 data, mime type, description, relationship |
+| `pdfMode` | `PdfMode` | PDF rendering mode: `Auto`, `Vector`, `Raster` |
+| `pdfSignCertificate` | `string` | Base64-encoded PKCS#12 certificate for digital signing |
+| `pdfSignPassword` | `string` | Password for the signing certificate |
+| `pdfSignName` | `string` | Signer display name |
+| `pdfSignReason` | `string` | Reason for signing |
+| `pdfSignLocation` | `string` | Signing location |
+| `pdfSignTimestampUrl` | `string` | RFC 3161 timestamp server URL |
+| `pdfUserPassword` | `string` | Password required to open the PDF |
+| `pdfOwnerPassword` | `string` | Password for full PDF access |
+| `pdfPermissions` | `string` | Comma-separated permissions (e.g. `"print,copy"`) |
+| `pdfAccessibility` | `AccessibilityLevel` | Accessibility level: `None`, `Basic`, `PdfUa1` |
+| `pdfLinearize` | `bool` | Enable PDF linearization for fast web viewing |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|
@@ -217,6 +293,8 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `WatermarkLayer` | `Over`, `Under` |
 | `PdfStandard` | `None`, `A2B`, `A3B` |
 | `EmbedRelationship` | `Alternative`, `Supplement`, `Data`, `Source`, `Unspecified` |
+| `PdfMode` | `Auto`, `Vector`, `Raster` |
+| `AccessibilityLevel` | `None`, `Basic`, `PdfUa1` |
 
 ### Exceptions
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Centrix\Forge\Tests;
 
 use Centrix\Forge\{
+    AccessibilityLevel,
     BarcodeAnchor,
     BarcodeType,
     DitherMethod,
@@ -13,6 +14,7 @@ use Centrix\Forge\{
     Orientation,
     OutputFormat,
     Palette,
+    PdfMode,
     WatermarkLayer,
 };
 use PHPUnit\Framework\TestCase;
@@ -271,5 +273,156 @@ class ForgeClientTest extends TestCase
             ->buildPayload();
 
         $this->assertFalse($payload['pdf']['barcodes'][0]['draw_background']);
+    }
+
+    public function testPdfModePayload(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfMode(PdfMode::Vector)
+            ->buildPayload();
+
+        $this->assertSame('vector', $payload['pdf']['mode']);
+    }
+
+    public function testPdfModeRaster(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfMode(PdfMode::Raster)
+            ->buildPayload();
+
+        $this->assertSame('raster', $payload['pdf']['mode']);
+    }
+
+    public function testPdfSignatureFullPayload(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfSignCertificate('base64cert==')
+            ->pdfSignPassword('secret')
+            ->pdfSignName('John Doe')
+            ->pdfSignReason('Approval')
+            ->pdfSignLocation('New York')
+            ->pdfSignTimestampUrl('https://tsa.example.com')
+            ->buildPayload();
+
+        $sig = $payload['pdf']['signature'];
+        $this->assertSame('base64cert==', $sig['certificate_data']);
+        $this->assertSame('secret', $sig['password']);
+        $this->assertSame('John Doe', $sig['signer_name']);
+        $this->assertSame('Approval', $sig['reason']);
+        $this->assertSame('New York', $sig['location']);
+        $this->assertSame('https://tsa.example.com', $sig['timestamp_url']);
+    }
+
+    public function testPdfSignatureMinimal(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfSignCertificate('cert-data')
+            ->buildPayload();
+
+        $sig = $payload['pdf']['signature'];
+        $this->assertSame('cert-data', $sig['certificate_data']);
+        $this->assertArrayNotHasKey('password', $sig);
+        $this->assertArrayNotHasKey('name', $sig);
+        $this->assertArrayNotHasKey('reason', $sig);
+        $this->assertArrayNotHasKey('location', $sig);
+        $this->assertArrayNotHasKey('timestamp_url', $sig);
+    }
+
+    public function testNoSignatureWithoutCertificate(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfSignName('John Doe')
+            ->pdfSignReason('Approval')
+            ->buildPayload();
+
+        $this->assertArrayNotHasKey('pdf', $payload);
+    }
+
+    public function testPdfEncryptionPayload(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfUserPassword('user123')
+            ->pdfOwnerPassword('owner456')
+            ->pdfPermissions('print,copy')
+            ->buildPayload();
+
+        $enc = $payload['pdf']['encryption'];
+        $this->assertSame('user123', $enc['user_password']);
+        $this->assertSame('owner456', $enc['owner_password']);
+        $this->assertSame('print,copy', $enc['permissions']);
+    }
+
+    public function testPdfEncryptionUserOnly(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfUserPassword('secret')
+            ->buildPayload();
+
+        $enc = $payload['pdf']['encryption'];
+        $this->assertSame('secret', $enc['user_password']);
+        $this->assertArrayNotHasKey('owner_password', $enc);
+        $this->assertArrayNotHasKey('permissions', $enc);
+    }
+
+    public function testPdfAccessibilityPayload(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfAccessibility(AccessibilityLevel::PdfUa1)
+            ->buildPayload();
+
+        $this->assertSame('pdf/ua-1', $payload['pdf']['accessibility']);
+    }
+
+    public function testPdfAccessibilityBasic(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfAccessibility(AccessibilityLevel::Basic)
+            ->buildPayload();
+
+        $this->assertSame('basic', $payload['pdf']['accessibility']);
+    }
+
+    public function testPdfLinearizePayload(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfLinearize(true)
+            ->buildPayload();
+
+        $this->assertTrue($payload['pdf']['linearize']);
+    }
+
+    public function testPdfLinearizeFalse(): void
+    {
+        $payload = $this->client->renderHtml('<p>test</p>')
+            ->pdfLinearize(false)
+            ->buildPayload();
+
+        $this->assertFalse($payload['pdf']['linearize']);
+    }
+
+    public function testAllNewPdfOptionsCombined(): void
+    {
+        $payload = $this->client->renderHtml('<h1>Secure Report</h1>')
+            ->pdfTitle('Secure Report')
+            ->pdfMode(PdfMode::Vector)
+            ->pdfSignCertificate('cert==')
+            ->pdfSignName('Jane Doe')
+            ->pdfUserPassword('reader')
+            ->pdfOwnerPassword('admin')
+            ->pdfPermissions('print')
+            ->pdfAccessibility(AccessibilityLevel::PdfUa1)
+            ->pdfLinearize(true)
+            ->buildPayload();
+
+        $pdf = $payload['pdf'];
+        $this->assertSame('Secure Report', $pdf['title']);
+        $this->assertSame('vector', $pdf['mode']);
+        $this->assertSame('cert==', $pdf['signature']['certificate_data']);
+        $this->assertSame('Jane Doe', $pdf['signature']['signer_name']);
+        $this->assertSame('reader', $pdf['encryption']['user_password']);
+        $this->assertSame('admin', $pdf['encryption']['owner_password']);
+        $this->assertSame('print', $pdf['encryption']['permissions']);
+        $this->assertSame('pdf/ua-1', $pdf['accessibility']);
+        $this->assertTrue($pdf['linearize']);
     }
 }

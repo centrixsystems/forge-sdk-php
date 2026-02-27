@@ -29,6 +29,7 @@ class RenderRequestBuilder
     private ?string $pdfKeywords = null;
     private ?string $pdfCreator = null;
     private ?bool $pdfBookmarks = null;
+    private ?bool $pdfPageNumbers = null;
     private ?string $pdfWatermarkText = null;
     private ?string $pdfWatermarkImage = null; // base64-encoded
     private ?float $pdfWatermarkOpacity = null;
@@ -41,6 +42,18 @@ class RenderRequestBuilder
     private ?PdfStandard $pdfStandard = null;
     private ?array $pdfEmbeddedFiles = null;
     private ?array $pdfBarcodes = null;
+    private ?string $pdfMode = null;
+    private ?string $pdfSignCertificate = null;
+    private ?string $pdfSignPassword = null;
+    private ?string $pdfSignName = null;
+    private ?string $pdfSignReason = null;
+    private ?string $pdfSignLocation = null;
+    private ?string $pdfSignTimestampUrl = null;
+    private ?string $pdfUserPassword = null;
+    private ?string $pdfOwnerPassword = null;
+    private ?string $pdfPermissions = null;
+    private ?string $pdfAccessibility = null;
+    private ?bool $pdfLinearize = null;
 
     public function __construct(
         ForgeClient $client,
@@ -71,6 +84,7 @@ class RenderRequestBuilder
     public function pdfKeywords(string $keywords): static { $this->pdfKeywords = $keywords; return $this; }
     public function pdfCreator(string $creator): static { $this->pdfCreator = $creator; return $this; }
     public function pdfBookmarks(bool $bookmarks): static { $this->pdfBookmarks = $bookmarks; return $this; }
+    public function pdfPageNumbers(bool $pageNumbers): static { $this->pdfPageNumbers = $pageNumbers; return $this; }
     public function pdfWatermarkText(string $text): static { $this->pdfWatermarkText = $text; return $this; }
     public function pdfWatermarkImage(string $base64Data): static { $this->pdfWatermarkImage = $base64Data; return $this; }
     public function pdfWatermarkOpacity(float $opacity): static { $this->pdfWatermarkOpacity = $opacity; return $this; }
@@ -114,6 +128,18 @@ class RenderRequestBuilder
         $this->pdfBarcodes[] = $entry;
         return $this;
     }
+    public function pdfMode(PdfMode $mode): static { $this->pdfMode = $mode->value; return $this; }
+    public function pdfSignCertificate(string $data): static { $this->pdfSignCertificate = $data; return $this; }
+    public function pdfSignPassword(string $password): static { $this->pdfSignPassword = $password; return $this; }
+    public function pdfSignName(string $name): static { $this->pdfSignName = $name; return $this; }
+    public function pdfSignReason(string $reason): static { $this->pdfSignReason = $reason; return $this; }
+    public function pdfSignLocation(string $location): static { $this->pdfSignLocation = $location; return $this; }
+    public function pdfSignTimestampUrl(string $url): static { $this->pdfSignTimestampUrl = $url; return $this; }
+    public function pdfUserPassword(string $password): static { $this->pdfUserPassword = $password; return $this; }
+    public function pdfOwnerPassword(string $password): static { $this->pdfOwnerPassword = $password; return $this; }
+    public function pdfPermissions(string $permissions): static { $this->pdfPermissions = $permissions; return $this; }
+    public function pdfAccessibility(AccessibilityLevel $level): static { $this->pdfAccessibility = $level->value; return $this; }
+    public function pdfLinearize(bool $linearize): static { $this->pdfLinearize = $linearize; return $this; }
 
     /** Build the payload array. */
     public function buildPayload(): array
@@ -146,13 +172,17 @@ class RenderRequestBuilder
 
         if ($this->pdfTitle !== null || $this->pdfAuthor !== null || $this->pdfSubject !== null
             || $this->pdfKeywords !== null || $this->pdfCreator !== null || $this->pdfBookmarks !== null
+            || $this->pdfPageNumbers !== null
             || $this->pdfWatermarkText !== null || $this->pdfWatermarkImage !== null
             || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
             || $this->pdfWatermarkColor !== null || $this->pdfWatermarkFontSize !== null
             || $this->pdfWatermarkScale !== null || $this->pdfWatermarkLayer !== null
             || $this->pdfWatermarkPages !== null
             || $this->pdfStandard !== null || $this->pdfEmbeddedFiles !== null
-            || $this->pdfBarcodes !== null) {
+            || $this->pdfBarcodes !== null
+            || $this->pdfMode !== null || $this->pdfSignCertificate !== null
+            || $this->pdfUserPassword !== null || $this->pdfOwnerPassword !== null
+            || $this->pdfAccessibility !== null || $this->pdfLinearize !== null) {
             $p = [];
             if ($this->pdfTitle !== null) $p['title'] = $this->pdfTitle;
             if ($this->pdfAuthor !== null) $p['author'] = $this->pdfAuthor;
@@ -160,6 +190,7 @@ class RenderRequestBuilder
             if ($this->pdfKeywords !== null) $p['keywords'] = $this->pdfKeywords;
             if ($this->pdfCreator !== null) $p['creator'] = $this->pdfCreator;
             if ($this->pdfBookmarks !== null) $p['bookmarks'] = $this->pdfBookmarks;
+            if ($this->pdfPageNumbers !== null) $p['page_numbers'] = $this->pdfPageNumbers;
             if ($this->pdfStandard !== null) $p['standard'] = $this->pdfStandard->value;
             if ($this->pdfWatermarkText !== null || $this->pdfWatermarkImage !== null
                 || $this->pdfWatermarkOpacity !== null || $this->pdfWatermarkRotation !== null
@@ -192,6 +223,25 @@ class RenderRequestBuilder
             if ($this->pdfBarcodes !== null) {
                 $p['barcodes'] = $this->pdfBarcodes;
             }
+            if ($this->pdfMode !== null) $p['mode'] = $this->pdfMode;
+            if ($this->pdfSignCertificate !== null) {
+                $sig = ['certificate_data' => $this->pdfSignCertificate];
+                if ($this->pdfSignPassword !== null) $sig['password'] = $this->pdfSignPassword;
+                if ($this->pdfSignName !== null) $sig['signer_name'] = $this->pdfSignName;
+                if ($this->pdfSignReason !== null) $sig['reason'] = $this->pdfSignReason;
+                if ($this->pdfSignLocation !== null) $sig['location'] = $this->pdfSignLocation;
+                if ($this->pdfSignTimestampUrl !== null) $sig['timestamp_url'] = $this->pdfSignTimestampUrl;
+                $p['signature'] = $sig;
+            }
+            if ($this->pdfUserPassword !== null || $this->pdfOwnerPassword !== null || $this->pdfPermissions !== null) {
+                $enc = [];
+                if ($this->pdfUserPassword !== null) $enc['user_password'] = $this->pdfUserPassword;
+                if ($this->pdfOwnerPassword !== null) $enc['owner_password'] = $this->pdfOwnerPassword;
+                if ($this->pdfPermissions !== null) $enc['permissions'] = $this->pdfPermissions;
+                $p['encryption'] = $enc;
+            }
+            if ($this->pdfAccessibility !== null) $p['accessibility'] = $this->pdfAccessibility;
+            if ($this->pdfLinearize !== null) $p['linearize'] = $this->pdfLinearize;
             $payload['pdf'] = $p;
         }
 
