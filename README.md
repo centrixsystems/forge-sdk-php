@@ -276,6 +276,7 @@ All methods return `static` for chaining. Call `->send()` to execute.
 | `pdfPermissions` | `string` | Comma-separated permissions (e.g. `"print,copy"`) |
 | `pdfAccessibility` | `AccessibilityLevel` | Accessibility level: `None`, `Basic`, `PdfUa1` |
 | `pdfLinearize` | `bool` | Enable PDF linearization for fast web viewing |
+| `pdfLang` | `string` | Document language (BCP 47 tag, e.g. `"en-US"`). Required for PDF/UA-1 |
 
 | Terminal Method | Returns | Description |
 |-----------------|---------|-------------|

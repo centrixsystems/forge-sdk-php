@@ -54,6 +54,7 @@ class RenderRequestBuilder
     private ?string $pdfPermissions = null;
     private ?string $pdfAccessibility = null;
     private ?bool $pdfLinearize = null;
+    private ?string $pdfLang = null;
 
     public function __construct(
         ForgeClient $client,
@@ -140,6 +141,8 @@ class RenderRequestBuilder
     public function pdfPermissions(string $permissions): static { $this->pdfPermissions = $permissions; return $this; }
     public function pdfAccessibility(AccessibilityLevel $level): static { $this->pdfAccessibility = $level->value; return $this; }
     public function pdfLinearize(bool $linearize): static { $this->pdfLinearize = $linearize; return $this; }
+    /** Document language as a BCP 47 tag (e.g. "en-US"). Required for PDF/UA-1. */
+    public function pdfLang(string $lang): static { $this->pdfLang = $lang; return $this; }
 
     /** Build the payload array. */
     public function buildPayload(): array
@@ -182,7 +185,8 @@ class RenderRequestBuilder
             || $this->pdfBarcodes !== null
             || $this->pdfMode !== null || $this->pdfSignCertificate !== null
             || $this->pdfUserPassword !== null || $this->pdfOwnerPassword !== null
-            || $this->pdfAccessibility !== null || $this->pdfLinearize !== null) {
+            || $this->pdfAccessibility !== null || $this->pdfLinearize !== null
+            || $this->pdfLang !== null) {
             $p = [];
             if ($this->pdfTitle !== null) $p['title'] = $this->pdfTitle;
             if ($this->pdfAuthor !== null) $p['author'] = $this->pdfAuthor;
@@ -242,6 +246,7 @@ class RenderRequestBuilder
             }
             if ($this->pdfAccessibility !== null) $p['accessibility'] = $this->pdfAccessibility;
             if ($this->pdfLinearize !== null) $p['linearize'] = $this->pdfLinearize;
+            if ($this->pdfLang !== null) $p['document_lang'] = $this->pdfLang;
             $payload['pdf'] = $p;
         }
 
