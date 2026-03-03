@@ -79,4 +79,46 @@ class ForgeClient
 
         return $body;
     }
+
+    /** @internal Send a render payload and capture X-Forge-Warning headers. Called by RenderRequestBuilder. */
+    public function sendRenderWithWarnings(array $payload): RenderResponse
+    {
+        $json = json_encode($payload, JSON_THROW_ON_ERROR);
+        $warnings = [];
+
+        $ch = curl_init("{$this->baseUrl}/render");
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $json,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_HEADERFUNCTION => function ($ch, string $header) use (&$warnings): int {
+                $trimmed = trim($header);
+                if (stripos($trimmed, 'X-Forge-Warning:') === 0) {
+                    $warnings[] = trim(substr($trimmed, strlen('X-Forge-Warning:')));
+                }
+                return strlen($header);
+            },
+        ]);
+
+        $body = curl_exec($ch);
+
+        if ($body === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new ForgeConnectionException(new \RuntimeException($error));
+        }
+
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($code !== 200) {
+            $decoded = json_decode($body, true);
+            $message = $decoded['error'] ?? "HTTP {$code}";
+            throw new ForgeServerException($code, $message);
+        }
+
+        return new RenderResponse($body, $warnings);
+    }
 }

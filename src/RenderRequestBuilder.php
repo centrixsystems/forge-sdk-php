@@ -258,4 +258,10 @@ class RenderRequestBuilder
     {
         return $this->client->sendRender($this->buildPayload());
     }
+
+    /** Send the render request and return a RenderResponse containing any CSS compatibility warnings. */
+    public function sendWithWarnings(): RenderResponse
+    {
+        return $this->client->sendRenderWithWarnings($this->buildPayload());
+    }
 }
